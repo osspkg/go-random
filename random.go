@@ -8,21 +8,35 @@ package random
 import (
 	crand "crypto/rand"
 	"math/rand"
+	"sync"
 	"time"
 )
 
-var rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
-
 var (
 	digest = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-+=~*@#$%&?!<>")
+	pool   = sync.Pool{New: func() any {
+		return createRand()
+	}}
 )
 
+func createRand() *rand.Rand {
+	return rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
 func BytesOf(n int, src []byte) []byte {
+	rnd, ok := pool.Get().(*rand.Rand)
+	if !ok {
+		rnd = createRand()
+	}
+	defer pool.Put(rnd)
+
 	tmp := make([]byte, len(src))
 	copy(tmp, src)
+
 	rnd.Shuffle(len(tmp), func(i, j int) {
 		tmp[i], tmp[j] = tmp[j], tmp[i]
 	})
+
 	b := make([]byte, n)
 	for i := range b {
 		b[i] = tmp[rnd.Intn(len(tmp))]
@@ -43,6 +57,12 @@ func String(n int) string {
 }
 
 func Shuffle(v []string) []string {
+	rnd, ok := pool.Get().(*rand.Rand)
+	if !ok {
+		rnd = createRand()
+	}
+	defer pool.Put(rnd)
+
 	rnd.Shuffle(len(v), func(i, j int) { v[i], v[j] = v[j], v[i] })
 	return v
 }
