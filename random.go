@@ -56,7 +56,7 @@ func String(n int) string {
 	return string(Bytes(n))
 }
 
-func Shuffle(v []string) []string {
+func Shuffle[T any](v []T) []T {
 	rnd, ok := pool.Get().(*rand.Rand)
 	if !ok {
 		rnd = createRand()
