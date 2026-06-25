@@ -67,7 +67,7 @@ func StringOf(n int, src string) string {
 
 func Bytes(n int) []byte {
 	digest := poolDigest.Get().([]byte)
-	poolDigest.Put(digest) //nolint:staticcheck
+	defer poolDigest.Put(digest) //nolint:staticcheck
 
 	return BytesOf(n, digest)
 }
